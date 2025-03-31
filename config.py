@@ -4,7 +4,7 @@ env_vars = {
   # Get From my.telegram.org
   "API_ID": "23933044",
   #Get For @BotFather
-  "BOT_TOKEN": "5123263018:AAFhrk204_c3NTupbt5aJ87tOOUVfCcrzA4",
+  "BOT_TOKEN": "7717441829:AAHNhP853L6wFR13-vqG5nlDECq5J1xKl3c",
   # Logs Channel ID
   "CACHE_CHANNEL": "",
   # Force Subs Channel username without @
