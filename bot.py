@@ -48,12 +48,13 @@ all_search: Dict[str, str] = dict()
 plugin_dicts: Dict[str, Dict[str, MangaClient]] = {
 	" Manga ": {
 		"WeebCentral": WeebCentralClient(),
-		"Manganelo": ManganeloClient(),
 		"Comick": ComickClient(),
 		"MangaDex": MangaDexClient(),
 		"AsuraScans": AsuraScansClient(),
 		"FlameComics": FlameComicsClient(),
 		"MangaBuddy": MangaBuddyClient(),
+                #"ManhwaClan": ManhwaClanClient(),
+                #"MangaMob": mangamob(),
 	},
 	" Novel ": {
 		"NovelBuddy": NovelBuddyClient(),
