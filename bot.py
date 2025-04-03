@@ -319,7 +319,7 @@ async def User_info_handler(app, query):
 	bu = [
 		[InlineKeyboardButton("* Thumb *", callback_data="ui_thumb"), InlineKeyboardButton("* Caption *", callback_data="ui_caption")],
 		[InlineKeyboardButton("1st Banner", callback_data="ui_1_banner"), InlineKeyboardButton("2nd Banner", callback_data="ui_l_banner")],
-		[InlineKeyboardButton("File Name", callback_data="ui_1_file_name")],
+		[InlineKeyboardButton("File Name", callback_data="ui_1_file_name"), InlineKeyboardButton("Dump Channel", callback_data="ui_dump")],#ui_dump
 		[InlineKeyboardButton("✖️ Close ✖️", callback_data="close")]
 	]
 	user_id = str(query.from_user.id)
@@ -594,6 +594,57 @@ async def User_info_handler(app, query):
 		else:
 			return await query.answer("You Havenot Banner")
 	
+	elif query.data == "ui_dump":
+		thumb_button = [
+			[InlineKeyboardButton("* Set/Change Dump Channel *", callback_data="ui_dump_set")],
+			[InlineKeyboardButton("* Delete Dump Channel *", callback_data="ui_dump_del")],
+			[InlineKeyboardButton("<= Back", callback_data="ui_back")],
+		]
+		
+		await query.message.edit_reply_markup(InlineKeyboardMarkup(thumb_button))
+	
+	elif query.data == "ui_dump_set":
+		thumb_button = [
+			[InlineKeyboardButton("* Set/Change Banner *", callback_data="ui_dump_set")],
+			[InlineKeyboardButton("* Delete Banner *", callback_data="ui_dump_del")],
+			[InlineKeyboardButton("<= Back", callback_data="ui_back")],
+		]
+		
+		msg = await app.send_message(int(user_id), text="Send Your Banner")
+		try:
+			data_id = await app.listen(
+				chat_id=int(user_id),
+				timeout=60)
+			
+			cf[user_id]["dump"] = data_id.text
+			sync()
+			
+			TXT = User_TXT.format(user_id, banner, "True", caption, thumbnali, file_name)
+			TXT += f"\n<code>Dump Channel: {data_id.text}"
+			
+			await query.message.edit_caption(TXT, reply_markup=InlineKeyboardMarkup(thumb_button))
+			
+			await msg.delete()
+			await data_id.delete()
+		
+		except Exception as err:
+			await msg.edit(err)
+	
+	elif query.data == "ui_dump_del":
+		thumb_button = [
+			[InlineKeyboardButton("* Set/Change Banner *", callback_data="ui_l_banner_set")],
+			[InlineKeyboardButton("* Delete Banner *", callback_data="ui_l_banner_del")],
+			[InlineKeyboardButton("<= Back", callback_data="ui_back")],
+		]
+		if l_banner:
+			cf[user_id]["dump"] = None
+			sync()
+			
+			try: await query.message.edit_caption(User_TXT.format(user_id, banner, "None", caption, thumbnali, file_name), reply_markup=InlineKeyboardMarkup(thumb_button))
+			except: pass
+		else:
+			return await query.answer("You Havenot Dump Channel ID")
+	
 	elif query.data == "ui_back":
 		if thumb:
 			await query.message.edit_media(InputMediaPhoto(thumb))
@@ -777,7 +828,8 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
 	file_name = cf.get(user_id, {}).get('file_name', None)
 	f_banner = cf.get(user_id, {}).get('f_banner', None)
 	l_banner = cf.get(user_id, {}).get('l_banner', None)
-
+	dump_channel = l_banner = cf.get(user_id, {}).get('dump', None)
+	
 	error_caption = '\n'.join([
 		f'{chapter.manga.name} - {chapter.name}',
 		f'{chapter.get_url()}'
@@ -864,10 +916,12 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
 	
 	if pdf:
 		await retry_on_flood(client.send_document)(chat_id, pdf, thumb=thumb_path, caption=success_caption)
+		if dump_channel:
+			await retry_on_flood(client.send_document)(int(dump_channel), pdf, thumb=thumb_path, caption=success_caption)
 	else:
 		await retry_on_flood(client.send_message)(chat_id, text=f"**<i>Errors Occured Making PDF</i>\n\n{error_caption}**")
 	
-	try: 
+	try:
 		shutil.rmtree(pictures_folder, ignore_errors=True)
 	except: 
 		try: os.remove(pdf)
